@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <malloc.h>
+#include "Application.h"
 #include "main.h"
 #include "dynamic_libs/os_functions.h"
 #include "dynamic_libs/gx2_functions.h"
@@ -11,9 +12,11 @@
 #include "dynamic_libs/sys_functions.h"
 #include "dynamic_libs/fs_functions.h"
 #include "dynamic_libs/vpad_functions.h"
+#include "dynamic_libs/padscore_functions.h"
 #include "dynamic_libs/proc_ui_functions.h"
 #include "utils/logger.h"
 #include "system/memory.h"
+#include "settings/CSettings.h"
 #include "common/common.h"
 #include "patcher/cafiine_function_patcher.h"
 #include "patcher/voice_swapping_function_patcher.h"
@@ -21,6 +24,7 @@
 #include "patcher/vpad_function_patcher.h"
 #include "patcher/proc_ui_function_patcher.h"
 #include "kernel/kernel_functions.h"
+#include "fs/sd_fat_devoptab.h"
 #include "gecko/pygecko.h"
 #include "cafiine/cafiine.h"
 #include "retain_vars.h"
@@ -47,7 +51,7 @@ void gambitBootScreen()
 	OSScreenInit();
 	int screen_buf0_size = OSScreenGetBufferSizeEx(0);
 	int screen_buf1_size = OSScreenGetBufferSizeEx(1);
-	unsigned char *screenBuffer = MEM1_alloc(screen_buf0_size + screen_buf1_size, 0x100);
+	unsigned char *screenBuffer = (unsigned char *)MEM1_alloc(screen_buf0_size + screen_buf1_size, 0x100);
 	char msg[80];
 
 	OSScreenSetBufferEx(0, screenBuffer);
@@ -105,6 +109,7 @@ int Menu_Main()
 	InitSysFunctionPointers();
 	InitFSFunctionPointers();
 	InitVPadFunctionPointers();
+	InitPadScoreFunctionPointers();
 	InitAXFunctionPointers();
 	InitProcUIFunctionPointers();
 
@@ -142,8 +147,29 @@ int Menu_Main()
     log_printf("Not in Mii Maker\n");
 
     if(isFirstBoot){ // First boot back to SysMenu
-        log_printf("Starting the TCPGecko server.\n");
-        start_pygecko();
+        //!*******************************************************************
+        //!                    Initialize heap memory                        *
+        //!*******************************************************************
+        log_printf("Menu_Main (line %d): Initialize memory management\n",__LINE__);
+        memoryInitialize();
+
+        log_printf("Menu_Main (line %d): Mount SD partition\n",__LINE__);
+        mount_sd_fat("sd");
+        log_printf("Menu_Main (line %d): Start main application\n",__LINE__);
+        s32 result = Application::instance()->exec();
+        log_printf("Menu_Main (line %d): Main application stopped result: %d\n",__LINE__,result);
+        Application::destroyInstance();
+        log_printf("Menu_Main (line %d): Unmount SD\n",__LINE__);
+        unmount_sd_fat("sd");
+        log_printf("Menu_Main (line %d): Release memory\n",__LINE__);
+        memoryRelease();
+        CSettings::destroyInstance();
+
+        //u_serv_ip ip;
+        //ip.full = ((192 << 24) | (168 << 16) | (2 << 8) | (18 << 0));
+
+        if(true){
+        /*
 
 
         memoryInitialize();
@@ -187,7 +213,7 @@ int Menu_Main()
             // Title
             PRINT_TEXT2(20, 1, "-- Swap DRC v%.1f --", BUILD);
 
-            if (gui_mode == 0) // IP selector
+            if (gui_mode == 1) // IP selector
             {
                 PRINT_TEXT2(0, 4, "   IP : %3d.%3d.%3d.%3d", ip.digit[0], ip.digit[1], ip.digit[2], ip.digit[3]);
                 PRINT_TEXT2(0, 6, "Use the D-Pad to enter in your computer's IP address for Cafiine.");
@@ -201,7 +227,7 @@ int Menu_Main()
                 PRINT_TEXT2(8 + 4 * sel_ip, 3, "vvv");
 
             }
-            else if (gui_mode == 1) // Credits
+            else if (gui_mode == 2) // Credits
             {
                 PRINT_TEXT2(0, 3, "Creators:");
                 PRINT_TEXT2(2, 5, "* Oatmealdome and Yahya14");
@@ -214,7 +240,7 @@ int Menu_Main()
                 PRINT_TEXT2(0, 15, "Press B to return to the menu.");
             }
 
-            else if (gui_mode == 2) // Guide
+            else if (gui_mode == 3) // Guide
             {
                 PRINT_TEXT2(0, 2, " ___                               ___ ");
                 PRINT_TEXT2(0, 3, " ------------------------------------- ");
@@ -346,15 +372,16 @@ int Menu_Main()
         screenBuffer = NULL;
 
         memoryRelease();
-
+        */
+        }
         //return to HBV
-        if (success == -1)
+        if (result == APPLICATION_CLOSE_MIIMAKER)
         {
             RestorePatches();
             return EXIT_SUCCESS;
         }
 
-        cafiine_addr = ip.full;
+        cafiine_addr = 0;
 
         log_printf("Returning to application.\n");
         log_printf("De-initializing logging.\n");
@@ -362,6 +389,7 @@ int Menu_Main()
         isFirstBoot = 0;
         SYSLaunchMenu();
     }
+    log_printf("EXIT_RELAUNCH_ON_LOAD.\n");
 	return EXIT_RELAUNCH_ON_LOAD;
 }
 

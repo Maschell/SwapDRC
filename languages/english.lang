@@ -1,0 +1,19 @@
+#: src/menu/InputGetterMenu.cpp:32
+msgid "Press any button on the USB-Controller you want to use."
+msgstr ""
+
+#: src/menu/InputGetterMenu.cpp:33
+msgid "Press B to disable the mapping"
+msgstr ""
+
+#: src/menu/MainWindowGUI.cpp:37
+msgid "Swap DRC!"
+msgstr ""
+
+#: src/menu/MainWindowGUI.cpp:55
+msgid "Press + to apply"
+msgstr ""
+
+#: src/menu/MainWindowGUI.cpp:63
+msgid "Press Home to return to HBL"
+msgstr ""

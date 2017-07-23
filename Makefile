@@ -32,17 +32,27 @@ TARGET		:=	swapdrc
 BUILD		:=	build
 BUILD_DBG	:=	$(TARGET)_dbg
 SOURCES		:=	src \
+				src/cafiine \
 				src/dynamic_libs \
 				src/fs \
-				src/game \
+				src/gecko \
+				src/gui \
 				src/kernel \
+				src/language \
+				src/menu \
 				src/patcher \
-				src/common \
+				src/resources \
+				src/settings \
+				src/sounds \
 				src/system \
 				src/utils \
-				src/cafiine \
-				src/gecko
-DATA		:=	
+				src/video \
+				src/video/shaders \
+
+DATA		:=	data \
+				data/images \
+				data/fonts \
+				data/sounds
 
 INCLUDES	:=  src
 
@@ -51,7 +61,7 @@ INCLUDES	:=  src
 #---------------------------------------------------------------------------------
 CFLAGS	:=  -std=gnu11 -mrvl -mcpu=750 -meabi -mhard-float -ffast-math \
 		    -O3 -Wall -Wextra -Wno-unused-parameter -Wno-strict-aliasing $(INCLUDE)
-CXXFLAGS := -std=gnu++11 -mrvl -mcpu=750 -meabi -mhard-float -ffast-math \
+CXXFLAGS := -std=gnu++11 -mrvl -mcpu=750 -meabi -mhard-float -ffast-math -D_GNU_SOURCE  \
 		    -O3 -Wall -Wextra -Wno-unused-parameter -Wno-strict-aliasing $(INCLUDE)
 ASFLAGS	:= -mregnames
 LDFLAGS	:= -nostartfiles -Wl,-Map,$(notdir $@).map,-wrap,malloc,-wrap,free,-wrap,memalign,-wrap,calloc,-wrap,realloc,-wrap,malloc_usable_size,-wrap,_malloc_r,-wrap,_free_r,-wrap,_realloc_r,-wrap,_calloc_r,-wrap,_memalign_r,-wrap,_malloc_usable_size_r,-wrap,valloc,-wrap,_valloc_r,-wrap,_pvalloc_r,--gc-sections
@@ -62,7 +72,7 @@ MAKEFLAGS += --no-print-directory
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=
+LIBS	:= -lgcc -lgd -lpng -ljpeg -lz -lfreetype -lmad -lvorbisidec
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -88,6 +98,8 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 #---------------------------------------------------------------------------------
 # automatically build a list of object files for our project
 #---------------------------------------------------------------------------------
+FILELIST	:=	$(shell bash ./filelist.sh)
+LANGUAGES	:=	$(shell bash ./updatelang.sh)
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))

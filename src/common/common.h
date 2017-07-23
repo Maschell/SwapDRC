@@ -56,6 +56,11 @@ extern "C" {
 #define RESTORE_INSTR_MAGIC         0xC001C0DE
 #define RESTORE_INSTR_ADDR          ((restore_instructions_t*)(MEM_BASE + 0x1600))
 
+#define DEFAULT_SWAP_DRC_PATH       SD_PATH WIIU_PATH "/apps/swapdrc"
+#define DEFAULT_LANG_PATH           DEFAULT_SWAP_DRC_PATH "/languages"
+#define LANGUAGE_FILE_EXT           ".lang"
+
+
 typedef struct _restore_instructions_t {
     unsigned int magic;
     unsigned int instr_count;
